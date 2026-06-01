@@ -4,14 +4,10 @@ name: folderNFiles
 
 # Controls when the workflow will run
 on:
-  push:
-    branches: [ "master"]
-    paths:
-      - 'demo/**'
-  pull_request:
-    branches: [ "master" ]
-    paths:
-      - 'demo/**'
+  workflow_run:
+    workflows: ["Java CI with Maven"]  # Must EXACTLY match the name field inside maven-ci.yml
+    types:
+      - completed
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -22,6 +18,7 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: self-hosted
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
