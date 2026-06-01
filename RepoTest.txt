@@ -3,3 +3,5 @@ Some new text added.
 This is the line added in the feature branch first day.
 
 Line 2 added after setting upstream
+
+git fetch remote
