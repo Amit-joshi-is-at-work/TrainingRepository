@@ -27,7 +27,7 @@ jobs:
 
       # Step 1: Create a folder in C drive
       - name: Create initial folder in C drive
-        run: mkdir C:\FirstFolder
+        run: mkdir C:\FirstFolderNew
         continue-on-error: true # Prevents the workflow from breaking if the folder already exists
 
       # Step 2: Create a file inside the first folder
@@ -40,5 +40,5 @@ jobs:
         continue-on-error: true
 
       # Step 4: Create file2 inside the new folder
-      - name: Create file2 inside SecondFolder
+      - name: Create file2 inside SecondFolderNew
         run: echo This is file 2 > C:\SecondFolder\file2.txt
