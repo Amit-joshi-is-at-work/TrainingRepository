@@ -45,6 +45,14 @@ jobs:
     - name: Terraform Init
       run: terraform init
 
+    - name: Terraform Format
+      run: terraform fmt
+
+    - name: Commit formatted files
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "chore: auto-format Terraform files [skip ci]"
+
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
       run: terraform fmt -check
