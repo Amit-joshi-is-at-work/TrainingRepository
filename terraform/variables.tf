@@ -1,4 +1,4 @@
-variable "bucket_name"{
+variable "bucket_name" {
   description = "The name of the S3 bucket"
   type        = string
   default     = "my-terraform-s3-bucket"
