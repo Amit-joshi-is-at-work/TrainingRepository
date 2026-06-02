@@ -48,15 +48,6 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Format
-        run: terraform fmt
-
-      - name: Commit formatted files
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: auto-format Terraform files [skip ci]"
-          file_pattern: '*.tf *.tfvars' # Fixed path pattern relative to working-directory
-
       # Only plan a standard deployment if the user didn't pick "destroy"
       - name: Terraform Plan
         if: ${{ github.event.inputs.action != 'destroy' }}
