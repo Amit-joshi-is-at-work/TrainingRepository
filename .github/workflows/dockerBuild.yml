@@ -5,6 +5,7 @@ on:
     branches: [ "main" ] # Triggers the pipeline whenever code is pushed to main
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build-and-push:
