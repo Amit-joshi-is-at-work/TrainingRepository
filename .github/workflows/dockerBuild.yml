@@ -30,7 +30,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./frontend.Dockerfile # Adjust this if your Dockerfile is inside a subfolder like ./backend/Dockerfile
+        file: ./ui/frontend.Dockerfile # Adjust this if your Dockerfile is inside a subfolder like ./backend/Dockerfile
         push: true
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/frontend-app:latest
