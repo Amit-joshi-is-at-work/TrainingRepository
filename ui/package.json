@@ -1,0 +1,9 @@
+{
+  "name": "frontend-ui",
+  "version": "1.0.0",
+  "description": "Simple Express Frontend",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
