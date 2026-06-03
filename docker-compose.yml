@@ -35,5 +35,13 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: mysecretpassword
 
+  patient-app-frontend:
+    build:
+      context: ./ui
+      dockerfile: frontend.Dockerfile
+    container_name: ui_container
+    ports:
+      - "4200:4200"
+
 volumes:
   pgdata:
