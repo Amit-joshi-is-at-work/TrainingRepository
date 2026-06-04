@@ -25,5 +25,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Frontend server is running successfully at http://localhost:${PORT}`);
+    console.log(`Frontend server is running successfully at ${PORT}`);
 });

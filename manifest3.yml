@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: amit007
+---
+### 1. DATABASE TIER (PostgreSQL)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-db-amit
+  namespace: amit007
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-db-amit
+  template:
+    metadata:
+      labels:
+        app: demo-db-amit
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "patientdb"          # <--- FIXED: Fixed typo (added 'a')
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "mysecretpassword!"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-db
+  namespace: amit007
+spec:
+  type: ClusterIP
+  selector:
+    app: demo-db-amit
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+---
+### 2. BACKEND TIER
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-backend-amit
+  namespace: amit007
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-backend-amit
+  template:
+    metadata:
+      labels:
+        app: demo-backend-amit
+    spec:
+      containers:
+        - name: backend-container
+          image: amitjoshi007/backend-app:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: "postgres-db"
+            - name: DB_NAME
+              value: "patientdb"          # <--- FIXED: Matches database name
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "mysecretpassword!"  # <--- FIXED: Added missing '!'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service            # <--- FIXED: Added this missing service block back!
+  namespace: amit007
+spec:
+  type: ClusterIP
+  selector:
+    app: demo-backend-amit
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+### 3. FRONTEND TIER
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app-amit
+  namespace: amit007
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-app-amit
+  template:
+    metadata:
+      labels:
+        app: demo-app-amit
+    spec:
+      containers:
+        - name: demo-app-amit
+          image: amitjoshi007/frontend-app:b79ddccbbd0834aed036e3a7737a635a996992ae
+          ports:
+            - containerPort: 4200
+          imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-amit-service
+  namespace: amit007
+spec:
+  type: LoadBalancer
+  selector:
+    app: demo-app-amit
+  ports:
+    - protocol: TCP
+      port: 4200
+      targetPort: 4200
