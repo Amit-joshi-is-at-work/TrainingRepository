@@ -33,6 +33,7 @@ jobs:
         context: ./ui
         file: ./ui/frontend.Dockerfile # Adjust this if your Dockerfile is inside a subfolder like ./backend/Dockerfile
         push: true
+        no-cache: true
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/frontend-app:latest
           ${{ secrets.DOCKERHUB_USERNAME }}/frontend-app:${{ github.sha }}
