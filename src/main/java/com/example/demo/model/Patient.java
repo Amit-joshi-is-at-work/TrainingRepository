@@ -28,6 +28,6 @@ public class Patient {
     public Integer getAge() { return age; }
     public void setAge(Integer age) { this.age = age; }
 
-    public String getSubject() { return ailment; }
+    public String getAilment() { return ailment; }
     public void setAilment(String ailment) { this.ailment = ailment; }
 }
