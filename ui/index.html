@@ -6,62 +6,125 @@
     <title>Patient Management</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
-        h1 { color: #333; }
+        h1, h2 { color: #333; }
         ul { list-style-type: none; padding: 0; }
         li { background: white; margin: 10px 0; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        /* Form Styling */
+        form { background: white; padding: 20px; border-radius: 5px; max-width: 400px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #load-btn { background-color: #28a745; margin-bottom: 10px; }
+        #load-btn:hover { background-color: #218838; }
     </style>
 </head>
 <body>
 
-    <h1>Patients List</h1>
-    <button onclick="fetchPatients()">Load Patients</button>
-    <ul id="patient-list"></ul>
+<h1>Patient Management</h1>
 
-    <script>
-        // Helper function to get the API URL dynamically
-        async function getBackendUrl() {
-            try {
-                const configResponse = await fetch('/config');
-                const config = await configResponse.json();
-                return config.backendUrl;
-            } catch (e) {
-                console.warn("Failed to fetch config, falling back to default.");
-                return 'http://localhost:8087'; // Safe fallback
-            }
+<h2>Add New Patient</h2>
+<form id="patient-form">
+    <div class="form-group">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required placeholder="John Doe">
+    </div>
+    <div class="form-group">
+        <label for="age">Age:</label>
+        <input type="number" id="age" required placeholder="30">
+    </div>
+    <div class="form-group">
+        <label for="ailment">Ailment:</label>
+        <input type="text" id="ailment" required placeholder="Flu">
+    </div>
+    <button type="submit">Add Patient</button>
+</form>
+
+<hr>
+
+<h2>Patients List</h2>
+<button id="load-btn" onclick="fetchPatients()">Load Patients</button>
+<ul id="patient-list"></ul>
+
+<script>
+    // Helper function to get the API URL dynamically
+    async function getBackendUrl() {
+        try {
+            const configResponse = await fetch('/config');
+            const config = await configResponse.json();
+            return config.backendUrl;
+        } catch (e) {
+            console.warn("Failed to fetch config, falling back to default.");
+            return 'http://localhost:8087'; // Safe fallback
         }
+    }
 
-        async function fetchPatients() {
-            const listElement = document.getElementById('patient-list');
-            listElement.innerHTML = '<li>Loading...</li>';
+    // Handle Form Submission
+    document.getElementById('patient-form').addEventListener('submit', async function(e) {
+        e.preventDefault(); // Stop page reload
 
-            try {
-                // 1. Get the dynamic backend URL
-                const backendUrl = await getBackendUrl();
+        // Extract values from form
+        const name = document.getElementById('name').value;
+        const age = parseInt(document.getElementById('age').value, 10);
+        const ailment = document.getElementById('ailment').value;
 
-                // 2. Use it in your fetch call
-                const response = await fetch(`${backendUrl}/patients`);
+        try {
+            const backendUrl = await getBackendUrl();
 
-                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            // POST call to backend
+            const response = await fetch(`${backendUrl}/patients`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, age, ailment })
+            });
 
-                const patients = await response.json();
-                listElement.innerHTML = '';
+            if (!response.ok) throw new Error(`Failed to add patient. Status: ${response.status}`);
 
-                if (patients.length === 0) {
-                    listElement.innerHTML = '<li>No patients found.</li>';
-                    return;
-                }
+            alert('Patient added successfully!');
+            document.getElementById('patient-form').reset(); // Clear form
+            fetchPatients(); // Refresh the list automatically
 
-                patients.forEach(patient => {
-                    const li = document.createElement('li');
-                    li.textContent = `ID: ${patient.id || 'N/A'} - Name: ${patient.name || 'Unknown'}`;
-                    listElement.appendChild(li);
-                });
-
-            } catch (error) {
-                console.error('Error fetching patients:', error);
-                listElement.innerHTML = `<li style="color: red;">Failed to load patients.</li>`;
-            }
+        } catch (error) {
+            console.error('Error adding patient:', error);
+            alert('Failed to add patient. Check console for details.');
         }
-    </script>
+    });
+
+    // Fetch and display patients
+    async function fetchPatients() {
+        const listElement = document.getElementById('patient-list');
+        listElement.innerHTML = '<li>Loading...</li>';
+
+        try {
+            const backendUrl = await getBackendUrl();
+            const response = await fetch(`${backendUrl}/patients`);
+
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+            const patients = await response.json();
+            listElement.innerHTML = '';
+
+            if (patients.length === 0) {
+                listElement.innerHTML = '<li>No patients found.</li>';
+                return;
+            }
+
+            patients.forEach(patient => {
+                const li = document.createElement('li');
+                // Updated string template to include Age and Ailment fields
+                li.textContent = `ID: ${patient.id || 'N/A'} | Name: ${patient.name || 'Unknown'} | Age: ${patient.age || 'N/A'} | Ailment: ${patient.ailment || 'None'}`;
+                listElement.appendChild(li);
+            });
+
+        } catch (error) {
+            console.error('Error fetching patients:', error);
+            listElement.innerHTML = `<li style="color: red;">Failed to load patients.</li>`;
+        }
+    }
+</script>
 </body>
 </html>
