@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonProperty; // Import this!
 
 @Entity
 public class Patient {
@@ -11,8 +12,14 @@ public class Patient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @JsonProperty("name")
     private String name;
+
+    @JsonProperty("age")
     private Integer age;
+
+    @JsonProperty("ailment")
     private String ailment;
 
     // Default Constructor
