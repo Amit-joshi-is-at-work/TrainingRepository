@@ -3,22 +3,21 @@ const path = require('path');
 const app = express();
 const PORT = 4200;
 
-// Serve static assets from the /app directory explicitly
+// Read the environment variable (fallback to localhost if not set)
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8087';
+
 app.use(express.static('/app'));
 
-// Serve the index.html file
+// Endpoint to expose the backend URL to the frontend
+app.get('/config', (req, res) => {
+    res.json({ backendUrl: BACKEND_URL });
+});
+
 app.get('/', (req, res) => {
-    // 1. Try serving from the hardcoded absolute container path first
     res.sendFile('/app/index.html', (err) => {
         if (err) {
-            console.error("Absolute path failed, trying process.cwd() fallback...");
-
-            // 2. Fallback to Current Working Directory if absolute path fails
             res.sendFile(path.join(process.cwd(), 'index.html'), (fallbackErr) => {
-                if (fallbackErr) {
-                    console.error("Fallback failed:", fallbackErr);
-                    res.status(500).send("Internal Server Error: File not found.");
-                }
+                if (fallbackErr) res.status(500).send("File not found.");
             });
         }
     });

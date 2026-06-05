@@ -18,37 +18,48 @@
     <ul id="patient-list"></ul>
 
     <script>
+        // Helper function to get the API URL dynamically
+        async function getBackendUrl() {
+            try {
+                const configResponse = await fetch('/config');
+                const config = await configResponse.json();
+                return config.backendUrl;
+            } catch (e) {
+                console.warn("Failed to fetch config, falling back to default.");
+                return 'http://localhost:8087'; // Safe fallback
+            }
+        }
+
         async function fetchPatients() {
             const listElement = document.getElementById('patient-list');
             listElement.innerHTML = '<li>Loading...</li>';
 
             try {
-                // Calling the backend API running on port 8087
-                const response = await fetch('http://localhost:8087/patients');
+                // 1. Get the dynamic backend URL
+                const backendUrl = await getBackendUrl();
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
+                // 2. Use it in your fetch call
+                const response = await fetch(`${backendUrl}/patients`);
+
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
                 const patients = await response.json();
-                listElement.innerHTML = ''; // Clear loading message
+                listElement.innerHTML = '';
 
                 if (patients.length === 0) {
                     listElement.innerHTML = '<li>No patients found.</li>';
                     return;
                 }
 
-                // Loop through patients and add them to the DOM
                 patients.forEach(patient => {
                     const li = document.createElement('li');
-                    // Adjust 'patient.name' or 'patient.id' based on your actual backend object structure
                     li.textContent = `ID: ${patient.id || 'N/A'} - Name: ${patient.name || 'Unknown'}`;
                     listElement.appendChild(li);
                 });
 
             } catch (error) {
                 console.error('Error fetching patients:', error);
-                listElement.innerHTML = `<li style="color: red;">Failed to load patients. Is the backend running on port 8087?</li>`;
+                listElement.innerHTML = `<li style="color: red;">Failed to load patients.</li>`;
             }
         }
     </script>
