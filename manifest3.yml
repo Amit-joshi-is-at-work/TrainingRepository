@@ -64,7 +64,7 @@ spec:
     spec:
       containers:
         - name: backend-container
-          image: amitjoshi007/backend-app:4e0e2f42107b839916ca6a752e9368310727b226
+          image: amitjoshi007/backend-app:d8a5459a8347a85043effb4832c9a5a6a9ad72c9
           ports:
             - containerPort: 8087
           env:
@@ -75,6 +75,7 @@ spec:
             - name: SPRING_DATASOURCE_PASSWORD
               value: "mysecretpassword!"
 ---
+# External facing service for your Frontend Application
 apiVersion: v1
 kind: Service
 metadata:
@@ -82,6 +83,21 @@ metadata:
   namespace: amit003
 spec:
   type: LoadBalancer
+  selector:
+    app: backend-amit
+  ports:
+    - protocol: TCP
+      port: 8087
+      targetPort: 8087
+---
+# Internal ClusterIP service specifically configured for clean Prometheus scraping
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-metrics-internal
+  namespace: amit003
+spec:
+  type: ClusterIP
   selector:
     app: backend-amit
   ports:
@@ -128,10 +144,8 @@ spec:
     - protocol: TCP
       port: 4200
       targetPort: 4200
-
 ---
 ### 4. MONITORING TIER (Prometheus & Grafana)
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -145,8 +159,8 @@ data:
       - job_name: 'spring-boot-app'
         metrics_path: '/actuator/prometheus'
         static_configs:
-          # Uses the Kubernetes internal DNS service name for your backend tier
-          - targets: ['backend-service-app:8087']
+          # Now securely references the internal ClusterIP service route
+          - targets: ['backend-metrics-internal:8087']
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -182,7 +196,7 @@ metadata:
   name: prometheus-service
   namespace: amit003
 spec:
-  type: ClusterIP # Kept internal, Grafana will talk to this inside the cluster
+  type: ClusterIP
   selector:
     app: prometheus-monitoring
   ports:
@@ -212,7 +226,7 @@ spec:
             - containerPort: 3000
           env:
             - name: GF_SECURITY_ADMIN_PASSWORD
-              value: "admin" # Change this to a secure password later
+              value: "admin"
 ---
 apiVersion: v1
 kind: Service
@@ -220,7 +234,7 @@ metadata:
   name: grafana-service
   namespace: amit003
 spec:
-  type: LoadBalancer # Exposes Grafana to the internet so you can view your dashboard
+  type: LoadBalancer
   selector:
     app: grafana-visuals
   ports:
