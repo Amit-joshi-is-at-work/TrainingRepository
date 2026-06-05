@@ -1,23 +1,23 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: amit007
+  name: amit003
 ---
 ### 1. DATABASE TIER (PostgreSQL)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: demo-db-amit
-  namespace: amit007
+  name: db-amit
+  namespace: amit003
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: demo-db-amit
+      app: db-amit
   template:
     metadata:
       labels:
-        app: demo-db-amit
+        app: db-amit
     spec:
       containers:
         - name: postgres
@@ -26,7 +26,7 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: "patientdb"          # <--- FIXED: Fixed typo (added 'a')
+              value: "patientdb"
             - name: POSTGRES_USER
               value: "postgres"
             - name: POSTGRES_PASSWORD
@@ -36,11 +36,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-db
-  namespace: amit007
+  namespace: amit003
 spec:
   type: ClusterIP
   selector:
-    app: demo-db-amit
+    app: db-amit
   ports:
     - protocol: TCP
       port: 5432
@@ -50,80 +50,180 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: demo-backend-amit
-  namespace: amit007
+  name: backend-amit
+  namespace: amit003
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: demo-backend-amit
+      app: backend-amit
   template:
     metadata:
       labels:
-        app: demo-backend-amit
+        app: backend-amit
     spec:
       containers:
         - name: backend-container
-          image: amitjoshi007/backend-app:latest
+          image: amitjoshi007/backend-app:4e0e2f42107b839916ca6a752e9368310727b226
           ports:
-            - containerPort: 8080
+            - containerPort: 8087
           env:
-            - name: DB_HOST
-              value: "postgres-db"
-            - name: DB_NAME
-              value: "patientdb"          # <--- FIXED: Matches database name
-            - name: DB_USER
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://172.20.251.242:5432/patientdb"
+            - name: SPRING_DATASOURCE_USERNAME
               value: "postgres"
-            - name: DB_PASSWORD
-              value: "mysecretpassword!"  # <--- FIXED: Added missing '!'
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "mysecretpassword!"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-service            # <--- FIXED: Added this missing service block back!
-  namespace: amit007
+  name: backend-service-app
+  namespace: amit003
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
-    app: demo-backend-amit
+    app: backend-amit
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      port: 8087
+      targetPort: 8087
 ---
 ### 3. FRONTEND TIER
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: demo-app-amit
-  namespace: amit007
+  name: app-amit
+  namespace: amit003
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: demo-app-amit
+      app: app-amit
   template:
     metadata:
       labels:
-        app: demo-app-amit
+        app: app-amit
     spec:
       containers:
-        - name: demo-app-amit
-          image: amitjoshi007/frontend-app:b79ddccbbd0834aed036e3a7737a635a996992ae
+        - name: app-amit
+          image: amitjoshi007/frontend-app:a48343c7e1440fe74765849a2b3cad10083bf564
           ports:
             - containerPort: 4200
           imagePullPolicy: Always
+          env:
+            - name: BACKEND_URL
+              value: "http://afbe1280541504ddc9b6eded3cdfcf82-1291520780.us-east-2.elb.amazonaws.com:8087"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: demo-amit-service
-  namespace: amit007
+  name: amit-service
+  namespace: amit003
 spec:
   type: LoadBalancer
   selector:
-    app: demo-app-amit
+    app: app-amit
   ports:
     - protocol: TCP
       port: 4200
       targetPort: 4200
+
+---
+### 4. MONITORING TIER (Prometheus & Grafana)
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: amit003
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: 'spring-boot-app'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          # Uses the Kubernetes internal DNS service name for your backend tier
+          - targets: ['backend-service-app:8087']
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-deployment
+  namespace: amit003
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-monitoring
+  template:
+    metadata:
+      labels:
+        app: prometheus-monitoring
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.45.0
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: amit003
+spec:
+  type: ClusterIP # Kept internal, Grafana will talk to this inside the cluster
+  selector:
+    app: prometheus-monitoring
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+  namespace: amit003
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-visuals
+  template:
+    metadata:
+      labels:
+        app: grafana-visuals
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.0.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "admin" # Change this to a secure password later
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: amit003
+spec:
+  type: LoadBalancer # Exposes Grafana to the internet so you can view your dashboard
+  selector:
+    app: grafana-visuals
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000

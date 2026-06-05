@@ -1,0 +1,32 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+data:
+  mapRoles: |
+    - rolearn: arn:aws:iam::867637277744:role/team-1-june-batch-node-group-role
+      groups:
+      - system:bootstrappers
+      - system:nodes
+      username: system:node:{{EC2PrivateDNSName}}
+  mapUsers: |
+    - userarn: arn:aws:iam::867637277744:user/dinanshu
+      username: dinanshu
+      groups:
+      - system:masters
+    - userarn: arn:aws:iam::867637277744:user/amit.joshi@socgen.com
+      username: amit.joshi@socgen.com
+      groups:
+      - system:masters
+    - userarn: arn:aws:iam::867637277744:root
+      username: root-admin
+      groups:
+      - system:masters
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2026-06-04T07:21:28Z"
+  name: aws-auth
+  namespace: kube-system
+  resourceVersion: "246175"
+  uid: 3c521314-a0c9-46b2-8fb6-54bc4be28c14

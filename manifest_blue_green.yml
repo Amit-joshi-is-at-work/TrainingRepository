@@ -1,0 +1,83 @@
+### CREATE THE NAMESPACE FIRST
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: amit007
+---
+### 1. THE BLUE DEPLOYMENT (Current Live Version)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app-amit-blue
+  namespace: amit007
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-app-amit
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: demo-app-amit
+        version: blue
+    spec:
+      containers:
+        - name: demo-app-amit
+          image: amitjoshi007/frontend-app:b79ddccbbd0834aed036e3a7737a635a996992ae
+          ports:
+            - containerPort: 4200
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+---
+### 2. THE GREEN DEPLOYMENT (New Version / Next Release)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app-amit-green
+  namespace: amit007
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-app-amit
+      version: green
+  template:
+    metadata:
+      labels:
+        app: demo-app-amit
+        version: green
+    spec:
+      containers:
+        - name: demo-app-amit
+          image: amitjoshi007/frontend-app:latest
+          ports:
+            - containerPort: 4200
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+---
+### 3. THE ACTIVE ROUTER SERVICE
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-amit-service
+  namespace: amit007
+spec:
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 4200
+      targetPort: 4200
+  selector:
+    app: demo-app-amit
+    version: blue
