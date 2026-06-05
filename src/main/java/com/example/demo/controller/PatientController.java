@@ -24,6 +24,7 @@ public class PatientController {
         return patientRepository.findAll();
     }
 
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping("/patients")
     public Patient addPatient(Patient patient){
        return patientRepository.save(patient);
