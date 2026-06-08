@@ -1,0 +1,42 @@
+### DATABASE TIER (PostgreSQL)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-amit
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.database.replicaCount }}
+  selector:
+    matchLabels:
+      app: db-amit
+  template:
+    metadata:
+      labels:
+        app: db-amit
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.database.image }}
+          ports:
+            - containerPort: {{ .Values.database.port }}
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.database.name | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.database.user | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.database.password | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-db
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: db-amit
+  ports:
+    - protocol: TCP
+      port: {{ .Values.database.port }}
+      targetPort: {{ .Values.database.port }}

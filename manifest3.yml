@@ -160,7 +160,7 @@ data:
         metrics_path: '/actuator/prometheus'
         static_configs:
           # Now securely references the internal ClusterIP service route
-          - targets: ['backend-metrics-internal:8087']
+          - targets: ['afbe1280541504ddc9b6eded3cdfcf82-1291520780.us-east-2.elb.amazonaws.com:8087']
 ---
 apiVersion: apps/v1
 kind: Deployment

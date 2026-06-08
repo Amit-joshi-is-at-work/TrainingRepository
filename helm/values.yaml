@@ -1,0 +1,30 @@
+# values.yaml
+
+namespace: amit003
+
+database:
+  replicaCount: 1
+  image: postgres:15-alpine
+  name: patientdb
+  user: postgres
+  password: "mysecretpassword!"
+  port: 5432
+
+backend:
+  replicaCount: 1
+  image: amitjoshi007/backend-app:d8a5459a8347a85043effb4832c9a5a6a9ad72c9
+  port: 8087
+  # Best practice: use internal DNS name instead of a hardcoded cluster IP
+  datasourceUrl: "jdbc:postgresql://postgres-db:5432/patientdb"
+  # Replace this with your actual external LoadBalancer DNS if needed
+  externalUrl: "http://afbe1280541504ddc9b6eded3cdfcf82-1291520780.us-east-2.elb.amazonaws.com:8087"
+
+frontend:
+  replicaCount: 1
+  image: amitjoshi007/frontend-app:a48343c7e1440fe74765849a2b3cad10083bf564
+  port: 4200
+
+monitoring:
+  prometheusImage: prom/prometheus:v2.45.0
+  grafanaImage: grafana/grafana:10.0.0
+  grafanaPassword: "admin"

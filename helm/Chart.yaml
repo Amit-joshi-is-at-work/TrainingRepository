@@ -1,0 +1,20 @@
+# patient-management/Chart.yaml
+apiVersion: v2
+name: patient-management
+description: A Helm chart for deploying the Patient Management Tiered Application (DB, Backend, Frontend, and Monitoring)
+
+# Specifies whether this chart defines an application (app) or a reusable library (library)
+type: application
+
+# This is the version number of the HELM CHART itself.
+# Increment this whenever you change chart templates or variables.
+version: 0.1.0
+
+# This is the version number of the APPLICATION running inside it (your backend/frontend suite).
+# It doesn't affect Helm's deployment logic, but it's great for tracking releases.
+appVersion: "1.0.0"
+
+# (Optional) Add yourself or your team as maintainers
+maintainers:
+  - name: Amit Joshi
+    email: amit003@example.com

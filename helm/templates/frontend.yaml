@@ -1,0 +1,39 @@
+### FRONTEND TIER
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-amit
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: app-amit
+  template:
+    metadata:
+      labels:
+        app: app-amit
+    spec:
+      containers:
+        - name: app-amit
+          image: {{ .Values.frontend.image }}
+          ports:
+            - containerPort: {{ .Values.frontend.port }}
+          imagePullPolicy: Always
+          env:
+            - name: BACKEND_URL
+              value: {{ .Values.backend.externalUrl | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: amit-service
+  namespace: {{ .Values.namespace }}
+spec:
+  type: LoadBalancer
+  selector:
+    app: app-amit
+  ports:
+    - protocol: TCP
+      port: {{ .Values.frontend.port }}
+      targetPort: {{ .Values.frontend.port }}
